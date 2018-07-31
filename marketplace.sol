@@ -3,9 +3,11 @@ pragma solidity ^0.4.23;
 contract Marketplace {
     address owner;
     /// TODO: make admins private
+    uint storeId = 0;
+    /// TODO: make storeId private 
     mapping (address => bool) public admins;
     mapping (address => StoreOwner) public storeOwners;
-    mapping (uint => Store) public stores;
+    mapping (uint => YoYoStore) public stores;
     
     constructor() {
         owner = msg.sender;
@@ -17,7 +19,7 @@ contract Marketplace {
         string name;
         // TODO: bit restriction on balance?
         uint balance;
-        mapping (uint => Store) storesOwned;
+        mapping (uint => YoYoStore) storesOwned;
         OwnerState state;
     }
     
@@ -25,12 +27,12 @@ contract Marketplace {
     enum OwnerState {Pending, Approved}
     enum StoreState {Active, Inactive}
 
-    struct Store {
+    struct YoYoStore {
         uint storeId;
         string name;
         address storeOwner;
-        mapping (uint => Product) products;
         StoreState state;
+        mapping (uint => Product) products;
     }
     struct Product {
         uint sku;
@@ -60,5 +62,25 @@ contract Marketplace {
         return (_address);
     }
     
-    /// TODO: add function to addStore only for onlyStoreOwners 
+    function addStore(string storeName, uint firstProductSku, string firstProductName, uint firstProductPrice, string firstProductDescription, uint firstProductInventory) 
+    onlyStoreOwners() returns (string newStoreName, address storeOwner) {
+        Product memory firstProduct = Product({
+            sku: firstProductSku,
+            name: firstProductName,
+            price: firstProductPrice,
+            description: firstProductDescription,
+            inventory: firstProductInventory
+        });
+        YoYoStore memory newStore = YoYoStore({
+                                storeId: storeId,
+                                name: storeName, 
+                                storeOwner: msg.sender, 
+                                state: StoreState.Active
+                                });
+        stores[storeId] = newStore;
+        require(storeId + 1 > storeId, "storeId has reached its limit");
+        storeId++;
+        // check for storeId over integer 
+        return (stores[storeId - 1].name, msg.sender);
+    }
 }
