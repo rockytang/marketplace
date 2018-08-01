@@ -6,6 +6,8 @@ contract Marketplace {
     uint globalStoreId = 0;
     // uint256
     uint public globalUnit = 1 ether;
+    // TODO: make globalLockBalances private. public during beta for testing
+    bool public globalLockBalances = false;
     /// TODO: make storeId private 
     mapping (address => bool) public admins;
     mapping (address => StoreOwner) public storeOwners;
@@ -70,6 +72,7 @@ contract Marketplace {
     event StoreIdOwned (uint storeIdOwned);
     event ProductInfo (uint sku, string name, uint price, string description, uint inventory, bool active);
     event AmountRequired (uint amountRequired);
+    event WithdrewFunds (uint fundsWithdrawn);
     
     function addStoreOwner(address _address, string _name) onlyAdmin() returns (address newStoreOwner) {
         storeOwners[_address] = StoreOwner({name: _name, balance: 0, state: OwnerState.Approved, storeIdsOwned: new uint[](0)});
@@ -124,6 +127,34 @@ contract Marketplace {
         emit RemoveProduct(sku);
         return true;
     }
+    
+    function buyProduct(uint storeId, uint sku, uint quantity) payable returns (bool success) {
+        // TODO: think about if we want to only accept exact change or accept more and refund extra 
+        uint price = stores[storeId].products[sku].price;
+        // TODO: integrate SafeMath library
+        uint requiredAmount = price * quantity;
+        emit AmountRequired(requiredAmount);
+        require(msg.value == requiredAmount, "You need to send exact amount required.");
+        require(stores[storeId].products[sku].inventory > 0, "The request product has no more inventory.");
+        stores[storeId].products[sku].inventory = stores[storeId].products[sku].inventory - quantity;
+        // TODO: check for integer overflow
+        require(stores[storeId].balance + msg.value > stores[storeId].balance, "You have reached the max balance limit.");
+        stores[storeId].balance += msg.value;
+        return true;
+    }
+    
+    // TODO: consider allowing owners to withdraw partial store balances
+    function withdrawFunds(uint storeId) onlyOwnerOfStore(storeId) payable returns (bool success) {
+        // Note: Implemented mutex security pattern
+        require(!globalLockBalances, "Another transfer is in process, please try again later.");
+        globalLockBalances = true;
+        (msg.sender).transfer(stores[storeId].balance);
+        emit WithdrewFunds(stores[storeId].balance);
+        stores[storeId].balance = 0;
+        globalLockBalances = false;
+        return true;
+    }
+    
     /// Fetches for testing purposes
     // TODO: limit to only store owner
     function fetchAllProductInfo(uint storeId) {
@@ -139,22 +170,24 @@ contract Marketplace {
         }
     }
     
-    function buyProduct(uint storeId, uint sku, uint quantity) payable returns (bool success) {
-        // TODO: think about if we want to only accept exact change or accept more and refund extra 
-        uint price = stores[storeId].products[sku].price;
-        // TODO: integrate SafeMath library
-        uint requiredAmount = price * quantity;
-        emit AmountRequired(requiredAmount);
-        require(msg.value == requiredAmount, "You need to send exact amount required.");
-        require(stores[storeId].products[sku].inventory > 0, "The request product has no more inventory.");
-        stores[storeId].products[sku].inventory--;
-        // TODO: check for integer overflow
-        require(stores[storeId].balance + msg.value > stores[storeId].balance, "You have reached the max balance limit.");
-        stores[storeId].balance += msg.value;
-        return true;
+    function fetchStoreInfo(uint storeId)
+    returns (
+    uint storeId,
+    string name,
+    address storeOwner,
+    StoreState state,
+    uint balance,
+    uint nextProductSku) {
+        return (
+            stores[storeId].storeId,
+            stores[storeId].name,
+            stores[storeId].storeOwner,
+            stores[storeId].state,
+            stores[storeId].balance,
+            stores[storeId].nextProductSku
+        )
     }
     
-    // Fetches for testing purposes
     function fetchStoreOwnerInfo() returns (string name) {
         // cannot return dynamic array so emitting events instead to show owners all storeIds owned
         for (uint i = 0; i < storeOwners[msg.sender].storeIdsOwned.length; i++) {
@@ -165,9 +198,5 @@ contract Marketplace {
     
     function fetchContractBalance() returns (uint balance) {
         return this.balance;
-    }
-    
-    function fetchTest() returns (bool success) {
-        return (2000 finney == 2 ether);
     }
 }
