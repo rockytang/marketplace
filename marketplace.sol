@@ -170,14 +170,14 @@ contract Marketplace {
         }
     }
     
-    function fetchStoreInfo(uint storeId)
-    returns (
-    uint storeId,
-    string name,
-    address storeOwner,
-    StoreState state,
-    uint balance,
-    uint nextProductSku) {
+    function fetchStoreInfo(uint storeId) returns (
+        uint selectedStoreId,
+        string name,
+        address storeOwner,
+        StoreState state,
+        uint balance,
+        uint nextProductSku
+    ) {
         return (
             stores[storeId].storeId,
             stores[storeId].name,
@@ -185,7 +185,7 @@ contract Marketplace {
             stores[storeId].state,
             stores[storeId].balance,
             stores[storeId].nextProductSku
-        )
+        );
     }
     
     function fetchStoreOwnerInfo() returns (string name) {
