@@ -49,13 +49,56 @@
           <label>Get Store Owner Name</label>
           <input class="get-store-owner-address" type="text" placeholder="address">
           <button class="btn btn-default btn-fetchStoreOwnerInfo">Get Store Owner Info</button>
+          <p>Store Owner Name: <span class="resp-store-owner-name"></span></p>
           <br/>
+
+          <label>Add Store</label>
+          <input class="new-store-name" type="text" placeholder="store name">
+          <button class="btn btn-default btn-addStore">Add Store</button>
+          <br/>
+
+          <button class="btn btn-default btn-showStores">Show All Stores</button>
+          <br/>
+
+          <div id="stores-section" class="row">
+
+          </div>
 
         </div>
       </div>
 
       <div id="petsRow" class="row">
         <!-- PETS LOAD HERE -->
+      </div>
+    </div>
+
+    <div id="storeTemplate" style="display: none;">
+      <div class="col-sm-6 col-md-4 col-lg-3">
+        <div class="panel panel-default">
+          <div class="panel-heading">
+            <h3 class="store-name">Toyota</h3>
+          </div>
+          <div class="panel-body">
+            <strong>Store ID</strong>:
+            <span class="store-id">1</span>
+            <br/>
+            <strong>Store Owner</strong>:
+            <span class="store-owner">0xAddress</span>
+            <br/>
+            <strong>Store State</strong>:
+            <span class="store-state">Deactivated</span>
+            <br/>
+            <strong>Balance</strong>:
+            <span class="store-balance">1000</span>
+            <br/>
+            <strong>Next Product SKU</strong>:
+            <span class="store-next-sku">2</span>
+            <br/>
+
+            <br/>
+            <button class="btn btn-default btn-shop" type="button" data-id="0">Shop Here</button>
+          </div>
+        </div>
       </div>
     </div>
 

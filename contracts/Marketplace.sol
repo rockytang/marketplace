@@ -71,13 +71,13 @@ contract Marketplace {
   event RemoveProduct (uint skuRemoved);
   event StoreIdOwned (uint storeIdOwned);
   event StoreOwnerName (string storeOwnerName);
+  event StoreInfo (uint storeId, string name, address storeOwner, StoreState state, uint balance, uint nextProductSku);
   event ProductInfo (uint sku, string name, uint price, string description, uint inventory, bool active);
   event AmountRequired (uint amountRequired);
   event WithdrewFunds (uint fundsWithdrawn);
+  event EventIsAdmin (uint number);
   
-  function addStoreOwner(
-    address _address, 
-    string _name) 
+  function addStoreOwner(address _address, string _name) 
     onlyAdmin() 
     returns (address newStoreOwner) 
   {
@@ -86,15 +86,19 @@ contract Marketplace {
     return (_address);
   }
   
-  function addStore(string storeName) onlyStoreOwners() returns (string newStoreName, address storeOwner) {
-    Store memory newStore = Store({
-                storeId: globalStoreId,
-                name: storeName, 
-                storeOwner: msg.sender, 
-                state: StoreState.Active,
-                nextProductSku: 0,
-                balance: 0
-                });
+  function addStore(string storeName) 
+    public 
+    onlyStoreOwners() 
+    returns (string newStoreName, address storeOwner) 
+    {
+      Store memory newStore = Store({
+        storeId: globalStoreId,
+        name: storeName,
+        storeOwner: msg.sender,
+        state: StoreState.Active,
+        nextProductSku: 0,
+        balance: 0
+      });
     // record the new Store in stores mapping and storeOwners struct 
     stores[globalStoreId] = newStore;
     // TODO: check globalStoreId array
@@ -176,7 +180,7 @@ contract Marketplace {
     }
   }
   
-  function fetchStoreInfo(uint storeId) returns (
+  function fetchStoreInfo(uint storeId) public view returns (
     uint selectedStoreId,
     string name,
     address storeOwner,
@@ -194,6 +198,19 @@ contract Marketplace {
     );
   }
   
+  function fetchAllStoreInfo() public returns (bool success) {
+    for(uint i = 0; i < globalStoreId; i++) {
+      emit StoreInfo(
+        stores[i].storeId,
+        stores[i].name,
+        stores[i].storeOwner,
+        stores[i].state,
+        stores[i].balance,
+        stores[i].nextProductSku);
+    }
+    return true;
+  }
+
   function fetchStoreOwnerInfo(address _address) public returns (string name) {
     // cannot return dynamic array so emitting events instead to show owners all storeIds owned
     emit StoreOwnerName(storeOwners[_address].name);
@@ -213,7 +230,8 @@ contract Marketplace {
   }
 
 
-  function isAdmin() public returns (bool _isAdmin) {
+  function isAdmin(uint testNumber) public returns (bool _isAdmin) {
+    emit EventIsAdmin(testNumber);
     return admins[msg.sender];
   }
   

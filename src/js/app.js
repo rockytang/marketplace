@@ -67,6 +67,8 @@ App = {
     $(document).on('click', '.btn-isStoreOwner', App.isStoreOwner);
     $(document).on('click', '.btn-addStoreOwner', App.addStoreOwner);
     $(document).on('click', '.btn-fetchStoreOwnerInfo', App.fetchStoreOwnerInfo);
+    $(document).on('click', '.btn-addStore', App.addStore);
+    $(document).on('click', '.btn-showStores', App.showStores);
   },
   
   identifyUser: function() {
@@ -78,7 +80,7 @@ App = {
 
       App.contracts.Marketplace.deployed().then(function (instance) {
         marketplaceInstance = instance;
-        return marketplaceInstance.isAdmin({ from: account });
+        return marketplaceInstance.isAdmin( 2, { from: account });
       }).then(function(data) {
         console.log('rocky: ', data);
       }).catch(function(error) {
@@ -110,7 +112,7 @@ App = {
 
       App.contracts.Marketplace.deployed().then(function (instance) {
         marketplaceInstance = instance;
-        return marketplaceInstance.isAdmin({ from: account });
+        return marketplaceInstance.isAdmin( 2, { from: account });
       }).then(function (data) {
         console.log('rocky: ', data);
       }).catch(function (error) {
@@ -159,18 +161,73 @@ App = {
   },
   
   fetchStoreOwnerInfo: function() {
-    var address = $('.get-store-owner-address').val();
-  
+    web3.eth.getAccounts(function (error, accounts) {
+      if (error) {
+        console.log(error);
+      }
+      var account = accounts[0];
+
+      var address = $('.get-store-owner-address').val();
+    
+      App.contracts.Marketplace.deployed().then(function (instance) {
+        marketplaceInstance = instance;
+        return marketplaceInstance.fetchStoreOwnerInfo(address, { from: account });
+      }).then(function (data) {
+        // data.logs[0].args.storeOwnerName
+        var name = data.logs[0].args.storeOwnerName;
+        $('.resp-store-owner-name').text(name);
+      }).catch(function (error) {
+        console.log('error: ', error);
+      });
+    });
+  },
+
+  addStore: function() {
+    web3.eth.getAccounts(function (error, accounts) {
+      if (error) {
+        console.log(error);
+      }
+      var account = accounts[0];
+
+      var name = $('.new-store-name').val();
+
+      App.contracts.Marketplace.deployed().then(function (instance) {
+        marketplaceInstance = instance;
+        return marketplaceInstance.addStore(name, { from: account });
+      }).then(function (data) {
+        return App.showStores();
+      }).catch(function (error) {
+        console.log('error: ', error);
+      });
+    });
+  },
+
+  showStores: function() {
+    var marketplaceInstance;
+
     App.contracts.Marketplace.deployed().then(function (instance) {
       marketplaceInstance = instance;
-      return marketplaceInstance.fetchStoreOwnerInfo(address);
-    }).then(function (data, second, third) {
-      console.log('fetch store owner name: ', data);
-      console.log('fetch store owner second: ', second);
-      console.log('fetch store owner third: ', third);
+
+      return marketplaceInstance.fetchAllStoreInfo();
+    }).then(function (data) {
+      var storesSection = $('#stores-section');
+      var storeTemplate = $('#storeTemplate');
+
+      for (i = 0; i < data.logs.length; i ++) {
+        storeTemplate.find('.store-name').text(data.logs[i].args.name);
+        storeTemplate.find('.store-id').text(data.logs[i].args.storeId.c[0]);
+
+        // storeTemplate.find('.store-owner').text(data[i].storeOwner);
+        // storeTemplate.find('.store-state').text(data[i].state);
+        // storeTemplate.find('.store-balance').text(data[i].balance);
+        // storeTemplate.find('.store-next-sku').text(data[i].nextProductSku);
+        // storeTemplate.find('.btn-shop').attr('data-id', data[i].id);
+        storesSection.append(storeTemplate.html());
+      }
     }).catch(function (error) {
-      console.log('error: ', error);
+      console.log(error);
     });
+
   },
 
   markAdopted: function(adopters, account) {
