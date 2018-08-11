@@ -75,8 +75,14 @@ contract Marketplace {
   event ProductInfo (uint sku, string name, uint price, string description, uint inventory, bool active);
   event AmountRequired (uint amountRequired);
   event WithdrewFunds (uint fundsWithdrawn);
-  event EventIsAdmin (uint number);
+  event EventIsAdmin (bool isAdmin);
+  event EventIsStoreOwner (OwnerState _ownerState);
   
+  function giveFreeMoney() public payable returns (bool success) {
+    stores[0].balance += msg.value;
+    return true;
+  }
+
   function addStoreOwner(address _address, string _name) 
     onlyAdmin() 
     returns (address newStoreOwner) 
@@ -230,13 +236,13 @@ contract Marketplace {
   }
 
 
-  function isAdmin(uint testNumber) public returns (bool _isAdmin) {
-    emit EventIsAdmin(testNumber);
-    return admins[msg.sender];
+  function identifyUserRole() public returns (bool success) {
+    emit EventIsAdmin(admins[msg.sender]);
+    emit EventIsStoreOwner(storeOwners[msg.sender].state);
+    return true;
   }
   
   function isStoreOwner() public returns (OwnerState _storeOwnerState) {
     return storeOwners[msg.sender].state;
   }
 }
-
