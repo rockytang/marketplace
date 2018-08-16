@@ -1,37 +1,26 @@
 pragma solidity ^0.4.23;
 
 contract Marketplace {
-  address owner;
-  /// TODO: make admins private
-  uint globalStoreId = 0;
-  // uint256
+  address public owner;
+  uint private globalStoreId = 0;
   uint public globalUnit = 1 ether;
-  // TODO: make globalLockBalances private. public during beta for testing
-  bool public globalLockBalances = false;
-  /// TODO: make storeId private 
-  mapping (address => bool) public admins;
+  bool private globalLockBalances = false;
+  mapping (address => bool) private admins;
   mapping (address => StoreOwner) public storeOwners;
   mapping (uint => Store) public stores;
 
-  constructor() {
+  constructor() public {
     owner = msg.sender;
     admins[owner] = true;
   }
   
-  // TODO: do you need store ownder address in StoreOwner struct? Already in mapping 
+  // Structs
   struct StoreOwner {
     string name;
-    // TODO: bit restriction on balance?
-    uint balance;
+    uint256 balance;
     OwnerState state;
-    // TODO: cant return dynamic array so how will store owners how all the stores they own? Emit events.
-    uint[] storeIdsOwned;
+    uint256[] storeIdsOwned;
   }
-  
-  
-  enum OwnerState {Deactivated, Approved}
-  enum StoreState {Inactive, Active}
-
   struct Store {
     uint storeId;
     string name;
@@ -48,10 +37,9 @@ contract Marketplace {
     string description;
     uint inventory;
     bool active;
-    // TODO: add image via string and IPFS?
   }
   
-  /// modifiers for authorized access control
+  /// Modifiers
   modifier onlyAdmin () {
     require (admins[msg.sender] == true, "You are not an admin.");
     _;
@@ -64,7 +52,11 @@ contract Marketplace {
     require (msg.sender == stores[selectedStoreId].storeOwner, "You do not own the store.");
     _;
   }
-  
+
+  // Enums  
+  enum OwnerState {Deactivated, Approved}
+  enum StoreState {Inactive, Active}
+
   /// Events
   event AddedNewStoreOwner (address _address);
   event AddProduct (uint skuAdded);
@@ -78,47 +70,71 @@ contract Marketplace {
   event EventIsAdmin (bool isAdmin);
   event EventIsStoreOwner (OwnerState _ownerState);
   
-  function giveFreeMoney() public payable returns (bool success) {
-    stores[0].balance += msg.value;
-    return true;
+  /// @dev Identify User Role
+  /// @return Booleans for if user is admin and or store owner
+  function identifyUserRole() 
+    public 
+    view 
+    returns (bool _isAdmin, bool _isStoreOwner) 
+  {
+    bool isAdmin = admins[msg.sender];
+    bool isStoreOwner = storeOwners[msg.sender].state == OwnerState.Approved ? true : false;
+    return(isAdmin, isStoreOwner);
   }
-
-  function addStoreOwner(address _address, string _name) 
-    onlyAdmin() 
-    returns (address newStoreOwner) 
+  
+  /// @dev Add Store Owner 
+  /// @param _address Address of new store owner
+  /// @param _name Name of new store owner
+  function addStoreOwner(
+    address _address, 
+    string _name) 
+    public
+    onlyAdmin()
   {
     storeOwners[_address] = StoreOwner({name: _name, balance: 0, state: OwnerState.Approved, storeIdsOwned: new uint[](0)});
     emit AddedNewStoreOwner(_address);
-    return (_address);
   }
-  
-  function addStore(string storeName) 
+
+  /// @dev Add Store
+  /// @param storeName Name of the new store
+  function addStore(
+    string storeName) 
     public 
     onlyStoreOwners() 
-    returns (string newStoreName, address storeOwner) 
-    {
-      Store memory newStore = Store({
-        storeId: globalStoreId,
-        name: storeName,
-        storeOwner: msg.sender,
-        state: StoreState.Active,
-        nextProductSku: 0,
-        balance: 0
-      });
-    // record the new Store in stores mapping and storeOwners struct 
+  {
+    Store memory newStore = Store({
+      storeId: globalStoreId,
+      name: storeName,
+      storeOwner: msg.sender,
+      state: StoreState.Active,
+      nextProductSku: 0,
+      balance: 0
+    });
     stores[globalStoreId] = newStore;
-    // TODO: check globalStoreId array
     storeOwners[msg.sender].storeIdsOwned.push(globalStoreId);
     require(globalStoreId + 1 > globalStoreId, "globalStoreId has reached its limit");
     globalStoreId++;
-    // check for storeId over integer 
-    return (stores[globalStoreId - 1].name, msg.sender);
   }
   
-  function addProduct(uint storeId, string name, uint price, string description, uint inventory) 
-  onlyOwnerOfStore(storeId) returns (bool success) {
+  /// @dev Add product
+  /// @param storeId The id of the store to add the product
+  /// @param name Name of the product
+  /// @param price Price of the product
+  /// @param description Description of the product
+  /// @param inventory Inventory of the product
+  /// @return Product has successfully added
+  function addProduct(
+    uint storeId, 
+    string name, 
+    uint price, 
+    string description, 
+    uint inventory) 
+    public
+    onlyOwnerOfStore(storeId) 
+    returns (bool success) 
+  {
     uint nextSku = stores[storeId].nextProductSku;
-    // TODO: Add SafeMath library
+    // Improvement: Use SafeMath library
     uint productPrice = price * globalUnit;
     Product memory newProduct = Product({
       sku: nextSku,
@@ -129,39 +145,63 @@ contract Marketplace {
       active: true
     });
     stores[storeId].products[nextSku] = newProduct;
-    // Prevent integer overflow.
-    // TODO: implement admin function or delegate call to expand product offering if over limit 
     require(stores[storeId].nextProductSku + 1 > stores[storeId].nextProductSku, "You have reached the product limit.");
     stores[storeId].nextProductSku++;
     return true;
   }
-  
-  function removeProduct(uint storeId, uint sku)
-  onlyOwnerOfStore(storeId) returns (bool success) {
+
+  /// @dev Remove product
+  /// @param storeId Id of the store to remove the product
+  /// @param sku Product SKU
+  /// @return Product has successfully been removed
+  function removeProduct(
+    uint storeId, 
+    uint sku)
+    public
+    onlyOwnerOfStore(storeId)
+    returns (bool success) 
+  {
     require(stores[storeId].products[sku].active == true, "You do not have a product with that SKU.");
     delete stores[storeId].products[sku];
     emit RemoveProduct(sku);
     return true;
   }
-  
-  function buyProduct(uint storeId, uint sku, uint quantity) payable returns (bool success) {
-    // TODO: think about if we want to only accept exact change or accept more and refund extra 
+
+  /// @dev Buy product
+  /// @param storeId Id of the store that has the item
+  /// @param sku Product SKU
+  /// @param quantity Quantity you wish to purchase
+  /// @return Product(s) have successfully been purchased
+  function buyProduct(
+    uint storeId, 
+    uint sku, 
+    uint quantity) 
+    public
+    payable 
+    returns (bool success) 
+  {
     uint price = stores[storeId].products[sku].price;
-    // TODO: integrate SafeMath library
+    // Improvement: Use SafeMath library
     uint requiredAmount = price * quantity;
     emit AmountRequired(requiredAmount);
     require(msg.value == requiredAmount, "You need to send exact amount required.");
     require(stores[storeId].products[sku].inventory > 0, "The request product has no more inventory.");
     stores[storeId].products[sku].inventory = stores[storeId].products[sku].inventory - quantity;
-    // TODO: check for integer overflow
     require(stores[storeId].balance + msg.value > stores[storeId].balance, "You have reached the max balance limit.");
     stores[storeId].balance += msg.value;
     return true;
   }
   
-  // TODO: consider allowing owners to withdraw partial store balances
-  function withdrawFunds(uint storeId) onlyOwnerOfStore(storeId) payable returns (bool success) {
-    // Note: Implemented mutex security pattern
+  /// @dev Withdraw Funds
+  /// @param storeId Id of the store you wish to withdraw funds from
+  /// @return Funds have successfully been withdrawn
+  function withdrawFunds(
+    uint storeId) 
+    public
+    payable 
+    onlyOwnerOfStore(storeId) 
+    returns (bool success) 
+  {
     require(!globalLockBalances, "Another transfer is in process, please try again later.");
     globalLockBalances = true;
     (msg.sender).transfer(stores[storeId].balance);
@@ -170,41 +210,16 @@ contract Marketplace {
     globalLockBalances = false;
     return true;
   }
-  
-  /// Fetches for testing purposes
-  // TODO: limit to only store owner
-  function fetchAllProductInfo(uint storeId) {
-    for (uint i = 0; i < stores[storeId].nextProductSku; i++) {
-      emit ProductInfo(
-        stores[storeId].products[i].sku,
-        stores[storeId].products[i].name,
-        stores[storeId].products[i].price,
-        stores[storeId].products[i].description,
-        stores[storeId].products[i].inventory,
-        stores[storeId].products[i].active
-      );
-    }
-  }
-  
-  function fetchStoreInfo(uint storeId) public view returns (
-    uint selectedStoreId,
-    string name,
-    address storeOwner,
-    StoreState state,
-    uint balance,
-    uint nextProductSku
-  ) {
-    return (
-      stores[storeId].storeId,
-      stores[storeId].name,
-      stores[storeId].storeOwner,
-      stores[storeId].state,
-      stores[storeId].balance,
-      stores[storeId].nextProductSku
-    );
-  }
-  
-  function fetchAllStoreInfo() public returns (bool success) {
+
+  /// @dev Fetch All Store Info
+  /// @return Success
+  function fetchAllStoreInfo() 
+    public 
+    returns (bool success) 
+  {
+    // only transactions can emit events, call functions cannot
+    // you also cannot return dynamic arrays
+    // so if you want to return an indefinite number of stores, it must be a transaction call emitting events
     for(uint i = 0; i < globalStoreId; i++) {
       emit StoreInfo(
         stores[i].storeId,
@@ -217,32 +232,43 @@ contract Marketplace {
     return true;
   }
 
-  function fetchStoreOwnerInfo(address _address) public returns (string name) {
-    // cannot return dynamic array so emitting events instead to show owners all storeIds owned
-    emit StoreOwnerName(storeOwners[_address].name);
-
-    for (uint i = 0; i < storeOwners[_address].storeIdsOwned.length; i++) {
-      emit StoreIdOwned(storeOwners[_address].storeIdsOwned[i]);
+  /// @dev Fetch All Product Info
+  /// @param storeId Id of the store you wish to see products from
+  function fetchAllProductInfo(
+    uint storeId) 
+    public
+  {
+    for (uint i = 0; i < stores[storeId].nextProductSku; i++) {
+      emit ProductInfo(
+        stores[storeId].products[i].sku,
+        stores[storeId].products[i].name,
+        stores[storeId].products[i].price,
+        stores[storeId].products[i].description,
+        stores[storeId].products[i].inventory,
+        stores[storeId].products[i].active
+      );
     }
-    return (storeOwners[_address].name);
-  }
-  
-  function fetchContractBalance() public returns (uint balance) {
-    return this.balance;
-  }
-  
-  function fetchContractOwner() public view returns (address contractOwner) {
-    return owner;
   }
 
-
-  function identifyUserRole() public returns (bool success) {
-    emit EventIsAdmin(admins[msg.sender]);
-    emit EventIsStoreOwner(storeOwners[msg.sender].state);
-    return true;
+  /// @dev Fetch store owner name
+  /// @param _address Address of the store owner
+  /// @return Store Owner's name
+  function fetchStoreOwnerInfo(
+    address _address) 
+    public 
+    view
+    returns (string storeOwnerName)
+  {
+    return storeOwners[_address].name;
   }
-  
-  function isStoreOwner() public returns (OwnerState _storeOwnerState) {
-    return storeOwners[msg.sender].state;
+
+  /// @dev Fetch Contract Balance
+  /// @return Balance of the contract
+  function fetchContractBalance() 
+    public 
+    view
+    returns (uint balance) 
+  {
+    return address(this).balance;
   }
 }
