@@ -43,6 +43,7 @@ App = {
     $(document).on('click', '.btn-shop', App.showStoreProducts);
     $(document).on('click', '.btn-buy', App.buyProduct);
     $(document).on('click', '.btn-withdraw', App.withdrawFunds);
+    $(document).on('click', '.btn-toggleCircuitBreaker', App.toggleCircuitBreaker);
   },
   
   identifyUser: function() {
@@ -57,15 +58,22 @@ App = {
         marketplaceInstance = instance;
         return marketplaceInstance.identifyUserRole.call({ from: account });
       }).then(function(data) {
-        if (data[0]) {
-          $('.userAdmin').removeClass('hidden');
+        if (!data[0] && !data[1]) {
+          $('.userShopper').removeClass('hidden');
         }
         if (data[1]) {
           $('.userStoreOwner').removeClass('hidden');
         }
-        if (!data[0] && !data[1]) {
-          $('.userShopper').removeClass('hidden');
+        if (data[0]) {
+          $('.userAdmin').removeClass('hidden');
+          $('.admin-control').removeClass('hidden');
+        } else {
+          $('.admin-control').addClass('hidden');
         }
+        return marketplaceInstance.fetchCircuitBreakerToggle.call({ from: account });
+      }).then(function(circuitBreaker) {
+        var toggle = circuitBreaker == true ? "on" : "off";
+        $('.circuit-breaker').text(toggle);
         return App.showStores();
       }).catch(function(error) {
         console.log('error: ', error);
@@ -164,6 +172,8 @@ App = {
           if (account == data.logs[i].args.storeOwner) {
             storeTemplate.find('.btn-withdraw').removeClass('hidden');
             storeTemplate.find('.btn-withdraw').attr('store-id', storeId);
+          } else {
+            storeTemplate.find('.btn-withdraw').addClass('hidden');
           }
           storesSection.append(storeTemplate.html());
         }
@@ -261,6 +271,29 @@ App = {
         return marketplaceInstance.withdrawFunds(storeId, { from: account, gas: 3000000 });
       }).then(function (data) {
         console.log('after withdraw funds: ', data);
+      }).catch(function (error) {
+        console.log('error: ', error);
+      });
+    });
+  },
+
+  toggleCircuitBreaker: function() {
+    var toggleNow = $(".circuit-breaker").text();
+    toggleNow = toggleNow == "on" ? true : false;
+    var toggleAfter = !toggleNow;
+    web3.eth.getAccounts(function (error, accounts) {
+      if (error) {
+        console.log(error);
+      }
+      var account = accounts[0];
+      App.contracts.Marketplace.deployed().then(function (instance) {
+        marketplaceInstance = instance;
+        return marketplaceInstance.toggleCircuitBreaker(toggleAfter, { from: account, gas: 250000 });
+      }).then(function (data) {
+        return marketplaceInstance.fetchCircuitBreakerToggle.call({ from: account, gas: 250000 });
+      }).then(function (newCircuitBreaker) {
+        var toggle = newCircuitBreaker == true ? "on" : "off";
+        $('.circuit-breaker').text(toggle);
       }).catch(function (error) {
         console.log('error: ', error);
       });

@@ -1,10 +1,12 @@
 pragma solidity ^0.4.23;
 
+/** @title Marketplace */
 contract Marketplace {
     address public owner;
     uint private globalStoreId = 0;
     uint public globalUnit = 1 ether;
     bool private globalLockBalances = false;
+    bool public globalCircuitBreaker = false;
     mapping (address => bool) private admins;
     mapping (address => StoreOwner) public storeOwners;
     mapping (uint => Store) public stores;
@@ -50,6 +52,10 @@ contract Marketplace {
     }
     modifier onlyOwnerOfStore(uint selectedStoreId) {
         require (msg.sender == stores[selectedStoreId].storeOwner, "You do not own the store.");
+        _;
+    }
+    modifier circuitBreakerIsOff() {
+        require(globalCircuitBreaker == false, "Circuit Breaker is on, no funds are allowed to be transacted at this time.");
         _;
     }
 
@@ -178,6 +184,7 @@ contract Marketplace {
         uint quantity) 
         public
         payable 
+        circuitBreakerIsOff
         returns (bool success) 
     {
         uint price = stores[storeId].products[sku].price;
@@ -199,6 +206,7 @@ contract Marketplace {
         uint storeId) 
         public
         payable 
+        circuitBreakerIsOff
         onlyOwnerOfStore(storeId) 
         returns (bool success) 
     {
@@ -262,7 +270,24 @@ contract Marketplace {
     {
         return storeOwners[_address].name;
     }
-
+    
+    function toggleCircuitBreaker(bool toggle)
+        public
+        onlyAdmin
+        returns (bool isCircuitBreakerOn)
+    {
+        globalCircuitBreaker = toggle;
+        return globalCircuitBreaker;
+    }
+    
+    function fetchCircuitBreakerToggle()
+        public
+        view
+        returns (bool isCircuitBreakerOn)
+    {
+        return globalCircuitBreaker;
+    }
+    
     /// @dev Fetch Contract Balance
     /// @return Balance of the contract
     function fetchContractBalance() 
