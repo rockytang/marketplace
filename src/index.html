@@ -9,6 +9,7 @@
 
     <!-- Bootstrap -->
     <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/index.css" rel="stylesheet">
 
     <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
     <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
@@ -23,50 +24,73 @@
         <div class="col-xs-12 col-sm-8 col-sm-push-2">
           <h1 class="text-center">Decentralized Marketplace</h1>
           <hr/>
-          <br/>
         </div>
       </div>
 
       <div class="userRole" class="row">
         <div class="col-xs-12">
-          <h2 class="userAdmin hidden">Welcome Admin!</h2>
-          <h2 class="userStoreOwner hidden">Welcome Store Owner!</h2>
-          <h2 class="userShopper hidden">Welcome Shopper!</h2>
+          <h2>Welcome, <span class="visitor-address"></span></h2>
+          <h3 class="userAdmin hidden">You are an Admin!</h3>
+          <h3 class="userStoreOwner hidden">You are a Store Owner!</h3>
+          <h3 class="userShopper hidden">You are a Shopper!</h3>
         </div>
       </div>
 
       <div id="controlCenter" class="row">
         <div class="col-xs-12">
-                    
-          <label>Add Store Owner</label> 
-          <input class="new-store-owner-address" type="text" placeholder="address"> 
-          <input class="new-store-owner-name" type="text" placeholder="name">
-          <button class="btn btn-default btn-addStoreOwner">Add Store Owner</button> <br/>
 
-          <label>Get Store Owner Name</label>
-          <input class="get-store-owner-address" type="text" placeholder="address">
-          <button class="btn btn-default btn-fetchStoreOwnerInfo">Get Store Owner Info</button>
-          <p>Store Owner Name: <span class="resp-store-owner-name"></span></p>
-          <br/>
+          <div class="section">
+            <label>Add Store Owner</label> 
+            <input class="new-store-owner-address" type="text" placeholder="address"> 
+            <input class="new-store-owner-name" type="text" placeholder="name">
+            <button class="btn btn-default btn-addStoreOwner">Add Store Owner</button> <br/>
+          </div>
 
-          <label>Add Store</label>
-          <input class="new-store-name" type="text" placeholder="store name">
-          <button class="btn btn-default btn-addStore">Add Store</button>
-          <br/>
+          <div class="section">
+            <label>Get Store Owner Name</label>
+            <input class="get-store-owner-address" type="text" placeholder="address">
+            <button class="btn btn-default btn-fetchStoreOwnerInfo">Get Store Owner Name</button>
+          </div>
+          
+          <div class="section">
+            <p class="text-bold">Store Owner Name: <span class="resp-store-owner-name"></span></p>
+          </div>
+          
+          <div class="section">          
+            <label>Add Store</label>
+            <input class="new-store-name" type="text" placeholder="store name">
+            <button class="btn btn-default btn-addStore">Add Store</button>
+          </div>
 
-          <button class="btn btn-default btn-showStores">Show All Stores</button>
-          <br/>
+          <div class="section">
+            <button class="btn btn-default btn-showStores">Show All Stores</button>
+          </div>
 
-          <label>Add Product</label>
-          <input class="new-product-storeId" type="text" placeholder="store Id">
-          <input class="new-product-name" type="text" placeholder="product name">
-          <input class="new-product-price" type="text" placeholder="product price in ETH">
-          <input class="new-product-description" type="text" placeholder="enter description">
-          <input class="new-product-inventory" type="text" placeholder="enter inventory">
-          <button class="btn btn-default btn-addProduct">Add Product</button>
-          <br/>
+          <div class="section">
+            <label>Add Product</label>
+            <input class="new-product-storeId" type="text" placeholder="store Id">
+            <input class="new-product-name" type="text" placeholder="product name">
+            <input class="new-product-price" type="text" placeholder="product price in ETH">
+            <input class="new-product-description" type="text" placeholder="enter description">
+            <input class="new-product-inventory" type="text" placeholder="enter inventory">
+            <button class="btn btn-default btn-addProduct">Add Product</button>
+          </div>
+          
+          <div class="row">
+            <div class="col-xs-12 col-sm-8 col-sm-push-2">
+              <h3 class="text-center">Stores</h3>
+              <hr/>
+            </div>
+          </div>
 
           <div id="stores-section" class="row">
+          </div>
+
+          <div class="row">
+            <div class="col-xs-12 col-sm-8 col-sm-push-2">
+              <h3 class="text-center">Products</h3>
+              <hr/>
+            </div>
           </div>
 
           <div id="products-section" class="row">
@@ -79,28 +103,41 @@
       <div class="col-sm-6 col-md-4 col-lg-3">
         <div class="panel panel-default">
           <div class="panel-heading">
-            <h3 class="store-name">Toyota</h3>
+            <h3 class="store-name">Store Name</h3>
           </div>
           <div class="panel-body">
-            <strong>Store ID</strong>:
-            <span class="store-id">1</span>
-            <br/>
-            <strong>Store Owner</strong>:
-            <span class="store-owner">0xAddress</span>
-            <br/>
-            <strong>Store State</strong>:
-            <span class="store-state">Deactivated</span>
-            <br/>
-            <strong>Balance (in ETH)</strong>:
-            <span class="store-balance">1000</span>
-            <br/>
-            <strong>Next Product SKU</strong>:
-            <span class="store-next-sku">2</span>
-            <br/>
-            <br/>
-            <button class="btn btn-default btn-shop" type="button" data-id="0">Shop Here</button>
-            <br/>
-            <button class="btn btn-default btn-withdraw hidden" type="button" data-id="0">Withdraw Funds</button>
+            <div class="detail-section">
+              <strong>Store ID</strong>:
+              <span class="store-id">##</span>
+            </div>
+
+            <div class="detail-section">
+              <strong>Store Owner</strong>:
+              <span class="store-owner word-wrap">0x000</span>
+            </div>
+            
+            <div class="detail-section">
+              <strong>Store State</strong>:
+              <span class="store-state">Deactivated</span>
+            </div>
+            
+            <div class="detail-section">
+              <strong>Balance (in ETH)</strong>:
+              <span class="store-balance">0</span>
+            </div>
+            
+            <div class="detail-section">
+              <strong>Next Product SKU</strong>:
+              <span class="store-next-sku">##</span>
+            </div>
+            
+            <div class="detail-section">
+              <button class="btn btn-default btn-shop" type="button" data-id="0">Shop Here</button>
+            </div>
+            
+            <div class="detail-section">
+              <button class="btn btn-default btn-withdraw hidden" type="button" store-id="0">Withdraw Funds</button>
+            </div>
           </div>
         </div>
       </div>

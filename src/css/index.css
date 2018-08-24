@@ -1,0 +1,21 @@
+.section {
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+
+.word-wrap {
+   word-wrap: break-word;
+}
+
+.text-bold {
+  font-weight: 700;
+}
+
+.resp-store-owner-name {
+  padding: 0px 10px 0px 10px;
+}
+
+.detail-section {
+  padding-top: 5px;
+  padding-bottom: 5px;
+}

@@ -51,6 +51,7 @@ App = {
         console.log(error);
       }
       var account = accounts[0];
+      $('.visitor-address').text(account);
 
       App.contracts.Marketplace.deployed().then(function (instance) {
         marketplaceInstance = instance;
@@ -108,6 +109,7 @@ App = {
       }).then(function (data) {
         var name = data;
         $('.resp-store-owner-name').text(name);
+        $('.resp-store-owner-name').css("background", "yellow");
       }).catch(function (error) {
         console.log('error: ', error);
       });
@@ -150,15 +152,18 @@ App = {
         var storeTemplate = $('#storeTemplate');
         storesSection.html('');
         for (i = 0; i < data.logs.length; i ++) {
+          var storeState = data.logs[i].args.state.toNumber() == 1 ? "Activated" : "Deactivated"; // 0 is deactivated and 1 is activated state
+          var storeId = data.logs[i].args.storeId.toNumber();
           storeTemplate.find('.store-name').text(data.logs[i].args.name);
-          storeTemplate.find('.store-id').text(data.logs[i].args.storeId.toNumber());
+          storeTemplate.find('.store-id').text(storeId);
           storeTemplate.find('.store-owner').text(data.logs[i].args.storeOwner);
-          storeTemplate.find('.store-state').text(data.logs[i].args.state.toNumber()); // 0 is deactivated and 1 is activated state
+          storeTemplate.find('.store-state').text(storeState); 
           storeTemplate.find('.store-balance').text(data.logs[i].args.balance.toNumber() / App.globalPriceUnit);
           storeTemplate.find('.store-next-sku').text(data.logs[i].args.nextProductSku.toNumber());
           storeTemplate.find('.btn-shop').attr('data-id', data.logs[i].args.storeId.toNumber());
           if (account == data.logs[i].args.storeOwner) {
             storeTemplate.find('.btn-withdraw').removeClass('hidden');
+            storeTemplate.find('.btn-withdraw').attr('store-id', storeId);
           }
           storesSection.append(storeTemplate.html());
         }
@@ -245,7 +250,7 @@ App = {
   },
 
   withdrawFunds: function() {
-    var storeId = Number($(this).closest(".panel").find('.product-store-id').text());
+    var storeId = Number($(this).attr('store-id'));
     web3.eth.getAccounts(function (error, accounts) {
       if (error) {
         console.log(error);
