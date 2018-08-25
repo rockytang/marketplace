@@ -1,7 +1,10 @@
 pragma solidity ^0.4.23;
+import "node_modules/openzeppelin-solidity/contracts/math/SafeMath.sol";
 
 /** @title Marketplace */
 contract Marketplace {
+    using SafeMath for uint;
+
     address public owner;
     uint private globalStoreId = 0;
     uint public globalUnit = 1 ether;
@@ -140,8 +143,7 @@ contract Marketplace {
         returns (bool success) 
     {
         uint nextSku = stores[storeId].nextProductSku;
-        // Improvement: Use SafeMath library
-        uint productPrice = price * globalUnit;
+        uint productPrice = price.mul(globalUnit);
         Product memory newProduct = Product({
             sku: nextSku,
             name: name,
@@ -188,8 +190,7 @@ contract Marketplace {
         returns (bool success) 
     {
         uint price = stores[storeId].products[sku].price;
-        // Improvement: Use SafeMath library
-        uint requiredAmount = price * quantity;
+        uint requiredAmount = price.mul(quantity);
         emit AmountRequired(requiredAmount);
         require(msg.value == requiredAmount, "You need to send exact amount required.");
         require(stores[storeId].products[sku].inventory > 0, "The request product has no more inventory.");
