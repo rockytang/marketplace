@@ -10,6 +10,7 @@ Design pattern choices are documented in design_pattern_desicions.md
 ## Getting started
 ```bash
 // Start up Ganache
+$ npm install
 $ truffle compile
 $ truffle migrate // this project is using port 7545
 $ npm run dev
