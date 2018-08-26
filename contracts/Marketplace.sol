@@ -271,7 +271,10 @@ contract Marketplace {
     {
         return storeOwners[_address].name;
     }
-    
+
+    /// @dev Toggle Circuit Breaker
+    /// @param toggle Switch the toggle to true or false
+    /// @return The final state of the circuit breaker
     function toggleCircuitBreaker(bool toggle)
         public
         onlyAdmin
@@ -280,7 +283,9 @@ contract Marketplace {
         globalCircuitBreaker = toggle;
         return globalCircuitBreaker;
     }
-    
+
+    /// @dev Get Circuit Breaker State
+    /// @return The state of the circuit breaker
     function fetchCircuitBreakerToggle()
         public
         view
