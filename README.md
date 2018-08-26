@@ -2,8 +2,11 @@
 A decentralized online marketplace featuring admin, store owner, and shopper roles. <br/>
 As an admin: you can add store owners.  
 As a store owner: you can add stores, add products, track inventory, sell your products, and withdraw your store revenues.  
-As a shopper, you can purchase products available in the marketplace.
-
+As a shopper, you can purchase products available in the marketplace.  
+  
+Steps taken to avoid common attacks are documented in avoiding_common_attacks.md  
+Design pattern choices are documented in design_pattern_desicions.md  
+  
 ## Getting started
 ```bash
 // Start up Ganache
